@@ -6,6 +6,10 @@ class window.Backbone.Debug
   
   #  router/page overview
 
+  # track all objects
+
+  # generic nicer inspect
+
   logObj: (obj) =>
     console.log obj, _.keys(obj._callbacks)
   
