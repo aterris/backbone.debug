@@ -25,3 +25,15 @@ task :build do
   system 'coffee -c backbone.debug.coffee'
   system 'coffee -c spec/backbone.debug_spec.coffee'
 end
+
+desc 'build documentation'
+task :docs do
+  begin 
+    require 'rocco'
+  rescue LoadError
+    puts "rocco not found.\nInstall it by running 'gem install rocco'"
+    exit
+  end
+
+  system 'rocco backbone.debug.coffee'
+end
