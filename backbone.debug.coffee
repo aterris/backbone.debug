@@ -1,13 +1,13 @@
 class window.Backbone.Debug
   constructor: (options={}) ->
     @options = options
+    @trackObjects()
     @hookEvents()
     @hookSync()
   
   #  router/page overview
 
-  # track all objects
-
+  
   # generic nicer inspect
 
   logObj: (obj) =>
@@ -15,76 +15,57 @@ class window.Backbone.Debug
   
   logEvent: (obj, event) =>
     console.log @last_obj, obj, 'obj', @last_obj == obj
-    if @last_obj == obj #&& @last_event == event
-      clearTimeout(@at)
-      
-      @at = setTimeout( =>
-        console.log "boom"
-      , 10)
-      console.log 'set my timeout'
-    else
-      console.log 'something'
-    
-    @last_obj = obj
-    @last_event = event
+    # if @last_obj == obj #&& @last_event == event
+    #   clearTimeout(@at)
+    #   
+    #   @at = setTimeout( =>
+    #     console.log "boom"
+    #   , 10)
+    #   console.log 'set my timeout'
+    # else
+    #   console.log 'something'
+    # 
+    # @last_obj = obj
+    # @last_event = event
     
   
   logSync: (obj, method, model, options) =>
     console.log "Sync - #{method}", obj
   
   hookSync: =>
-    logSync = @logSync
-    sync = window.Backbone.sync
-    
-    window.Backbone.sync = (method, model, options) ->
-      logSync @, method, model, options
-      sync.apply @, arguments
+    @_hookMethod('sync', @logSync)
   
   hookEvents: =>
-    @hookBaseEvents()
-    @hookCollectionEvents()
-    @hookModelEvents()
-    @hookViewEvents()
-    @hookRouterEvents()
-  
-  hookBaseEvents: =>
-    logEvent = @logEvent
-    trigger = window.Backbone.Events.trigger
-    
-    window.Backbone.Events.trigger = (events) ->
-      logEvent(this, events)
-      trigger.apply(this, arguments)
-  
-  hookCollectionEvents: =>
-    logEvent = @logEvent
-    trigger = window.Backbone.Collection.prototype.trigger
-    
-    window.Backbone.Collection.prototype.trigger = (events) ->
-      logEvent(this, events)
-      trigger.apply(this, arguments)
-  
-  hookModelEvents: =>
-    logEvent = @logEvent
-    trigger = window.Backbone.Model.prototype.trigger
-    
-    window.Backbone.Model.prototype.trigger = (events) ->
-      logEvent(this, events)
-      trigger.apply(this, arguments)
-  
-  hookViewEvents: =>
-    logEvent = @logEvent
-    trigger = window.Backbone.View.prototype.trigger
-    
-    window.Backbone.View.prototype.trigger = (events) ->
-      logEvent(this, events)
-      trigger.apply(this, arguments)
-      
-  hookRouterEvents: =>
-    logEvent = @logEvent
-    trigger = window.Backbone.Router.prototype.trigger
+    @_hookPrototype('Collection', 'trigger', @logEvent)
+    @_hookPrototype('Model', 'trigger', @logEvent)
+    @_hookPrototype('View', 'trigger', @logEvent)
+    @_hookPrototype('Router', 'trigger', @logEvent)
 
-    window.Backbone.Router.prototype.trigger = (events) ->
-      logEvent(this, events)
-      trigger.apply(this, arguments)
+  trackObjects: =>
+    @objects ||= {Collection: {}, Model: {}, View: {}, Router: {}}
+    
+    saveObjects = =>
+      parent_object = arguments[0]
+      method = arguments[1]
+      object = arguments[2]
+      args = arguments[3]
+      
+      @objects[parent_object][object.constructor.name + ':' + object.cid] = object
+    
+    @_hookPrototype('Model', 'constructor', saveObjects)
+  
+  _hookMethod: (method, action) =>
+    original = window.Backbone[method]
+
+    window.Backbone[method] = ->
+      original.apply(this, arguments)
+      action(method, this, arguments)
+
+  _hookPrototype: (object, method, action) =>
+    original = window.Backbone[object].prototype[method]
+
+    window.Backbone[object].prototype[method] = ->
+      original.apply(this, arguments)
+      action(object, method, this, arguments)
 
 window.Backbone.debug = new Backbone.Debug()
