@@ -1,58 +1,58 @@
 class window.Backbone.Debug
   constructor: (options={}) ->
     @options = options
-    @trackObjects()
-    @hookEvents()
-    @hookSync()
-  
-  #  router/page overview
+    @_objects ||= {Collection: {}, Model: {}, View: {}, Router: {}}
+    @_trackObjects()
+    @_hookEvents()
+    @_hookSync()
 
+  collections: =>
+    @_objects.Collections
   
-  # generic nicer inspect
-
-  logObj: (obj) =>
+  models: =>
+    @_objects.Model
+  
+  views: =>
+    @_objects.View
+  
+  routers: =>
+    @_objects.Router
+  
+  on: =>
+    true
+  
+  off: =>
+    true
+  
+  info:
+    'Backbone.debug': '0.1.0'
+    'Backbone': window.Backbone.VERSION
+    'Underscore': window._.VERSION
+  
+  
+  _logObj: (obj) =>
     console.log obj, _.keys(obj._callbacks)
   
-  logEvent: (obj, event) =>
+  _logEvent: (obj, event) =>
     console.log @last_obj, obj, 'obj', @last_obj == obj
-    # if @last_obj == obj #&& @last_event == event
-    #   clearTimeout(@at)
-    #   
-    #   @at = setTimeout( =>
-    #     console.log "boom"
-    #   , 10)
-    #   console.log 'set my timeout'
-    # else
-    #   console.log 'something'
-    # 
-    # @last_obj = obj
-    # @last_event = event
-    
-  
-  logSync: (obj, method, model, options) =>
+     
+  _logSync: (obj, method, model, options) =>
     console.log "Sync - #{method}", obj
   
-  hookSync: =>
-    @_hookMethod('sync', @logSync)
+  _hookSync: =>
+    @_hookMethod('sync', @_logSync)
   
-  hookEvents: =>
-    @_hookPrototype('Collection', 'trigger', @logEvent)
-    @_hookPrototype('Model', 'trigger', @logEvent)
-    @_hookPrototype('View', 'trigger', @logEvent)
-    @_hookPrototype('Router', 'trigger', @logEvent)
+  _hookEvents: =>
+    @_hookPrototype('Collection', 'trigger', @_logEvent)
+    @_hookPrototype('Model', 'trigger', @_logEvent)
+    @_hookPrototype('View', 'trigger', @_logEvent)
+    @_hookPrototype('Router', 'trigger', @_logEvent)
 
-  trackObjects: =>
-    @objects ||= {Collection: {}, Model: {}, View: {}, Router: {}}
-    
-    saveObjects = =>
-      parent_object = arguments[0]
-      method = arguments[1]
-      object = arguments[2]
-      args = arguments[3]
-      
-      @objects[parent_object][object.constructor.name + ':' + object.cid] = object
-    
-    @_hookPrototype('Model', 'constructor', saveObjects)
+  _saveObjects: (type, method, object) =>
+    @_objects[type][object.constructor.name + ':' + object.cid] = object
+  
+  _trackObjects: =>
+    @_hookPrototype('Model', 'constructor', @_saveObjects)
   
   _hookMethod: (method, action) =>
     original = window.Backbone[method]
