@@ -17,38 +17,30 @@
       <header>
         <h1>Backbone.debug</h1>
         <p>A small debug library for Backbone.js</p>
-        <p class="view"><a href="https://github.com/aterris/backbone.debug">Download Backbone.debug <small>Version 0.1.0</small></a></p>
-        <p class="view"><a href="https://github.com/aterris/backbone.debug">View the Project on GitHub <small>aterris/backbone.debug</small></a></p>
+        <p class="view"><a href="https://github.com/aterris/backbone.debug">Download <small>Version 0.1.0</small></a></p>
+        <p class="view"><a href="https://github.com/aterris/backbone.debug">View on GitHub <small>aterris/backbone.debug</small></a></p>
       </header>
       <section>
-        <h3>Backbone.debug - A better way to debug your Backbone.js application</h3>
+        <h3>Backbone.debug - a better way to debug your Backbone.js application</h3>
 
-<p>I finally got sick of hacking console.log statements into the backbone source, and other common debugging steps that get used </p>
+<p>Backbone.debug is a small library that integrates with <a href="http://documentcloud.github.com/backbone/">Backbone.js</a> to easily provide common debugging functionality and tracking.</p>
 
-<pre><code> usage example </code></pre>
+<p>Simply include Backbone.debug.js directly after backbone.js to get started</p>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<h3>Event Logging</h3>
+<p>Event logging is central to debugging event driven applications. Backbone.debug automatically tracks and logs all events.</p>
 
-<h3>Logging</h3>
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them.</p>
+<p>The tracked events are intelligently grouped by object and event type. This grouping helps to organize the output logically and succiently. This functionality ensure that if you sync an object and a change event is fired for all attributes, only a single event will be logged containing all of the attributes that were changed</p>
 
-<h5>Event Logging</h5>
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<h3>Sync Logging</h3>
+<p>Calls to Backbone.sync are tracked and logged to provide better insight into the interactions that are occuring within your application. These logs provide information about the object, the type of ajax request, and the url of the request.</p>
 
-<h5>Sync Logging</h5>
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>App Details</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner.</p>
-
-<h3>console.log Replacement</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. </p>
+<h3>Application Objects</h3>
+<p>Backbone.debug allows you to quickly see all instantiated collections, models, and views. The output will provide a quick overview of the state of the project.</p>
 
 <h3>Support or Issues</h3>
 
-<p>Please report any issues on the github page.</p>
+<p>Please report any issues on <a href="https://github.com/aterris/backbone.debug/issues">github</a>.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/aterris">aterris</a></p>
