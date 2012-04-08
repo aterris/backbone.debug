@@ -6,6 +6,7 @@ class window.Backbone.Debug
     @_hookEvents()
     @_hookSync()
 
+  ##### Object Accessors
   collections: =>
     @_objects.Collections
   
@@ -18,18 +19,20 @@ class window.Backbone.Debug
   routers: =>
     @_objects.Router
   
-  on: =>
+  ##### Toggle Logging
+  on: (option) =>
     true
   
-  off: =>
+  off: (option)=>
     true
   
+  ##### Relevant Version Info
   info:
     'Backbone.debug': '0.1.0'
     'Backbone': window.Backbone.VERSION
     'Underscore': window._.VERSION
   
-  
+  ##### Console Log Wrappers
   _logObj: (obj) =>
     console.log obj, _.keys(obj._callbacks)
   
@@ -39,9 +42,11 @@ class window.Backbone.Debug
   _logSync: (obj, method, model, options) =>
     console.log "Sync - #{method}", obj
   
+  ##### Hook Backbone.sync
   _hookSync: =>
     @_hookMethod('sync', @_logSync)
   
+  ##### Hook Backbone Events
   _hookEvents: =>
     @_hookPrototype('Collection', 'trigger', @_logEvent)
     @_hookPrototype('Model', 'trigger', @_logEvent)
@@ -51,9 +56,11 @@ class window.Backbone.Debug
   _saveObjects: (type, method, object) =>
     @_objects[type][object.constructor.name + ':' + object.cid] = object
   
+  ##### Track Object Creation
   _trackObjects: =>
     @_hookPrototype('Model', 'constructor', @_saveObjects)
   
+  # Hook Backbone Method
   _hookMethod: (method, action) =>
     original = window.Backbone[method]
 
@@ -61,6 +68,7 @@ class window.Backbone.Debug
       original.apply(this, arguments)
       action(method, this, arguments)
 
+  # Hook Backbone Prototye Method
   _hookPrototype: (object, method, action) =>
     original = window.Backbone[object].prototype[method]
 
@@ -68,4 +76,5 @@ class window.Backbone.Debug
       original.apply(this, arguments)
       action(object, method, this, arguments)
 
+# Initialize Backbone.debug
 window.Backbone.debug = new Backbone.Debug()
