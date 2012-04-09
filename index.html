@@ -25,12 +25,10 @@
 
 <p>Backbone.debug is a small library that integrates with <a href="http://documentcloud.github.com/backbone/">Backbone.js</a> to easily provide common debugging functionality.</p>
 
-<p>Simply include Backbone.debug.js directly after Backbone.js to get started</p>
+<p>Simply include Backbone.debug.js directly after Backbone.js to get started!</p>
 
 <h3>Event Logging</h3>
-<p>Event logging is central to debugging event driven applications. Backbone.debug automatically tracks and logs all events.</p>
-
-<p>The tracked events are intelligently grouped by object and event type. This grouping helps to organize the output logically and succiently. This functionality ensure that if you sync an object and a change event is fired for all attributes, only a single event will be logged containing all of the attributes that were changed</p>
+<p>Backbone.debug automatically tracks and logs all triggered events. Change events are grouped together per object for clarity.</p>
 
 <h3>Sync Logging</h3>
 <p>Calls to Backbone.sync are tracked and logged to provide better insight into the interactions that are occuring within your application.</p>
