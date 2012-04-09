@@ -42,6 +42,13 @@ class window.Backbone.Debug
       @_options['log:events'] = false
       @_options['log:sync'] = false
   
+  ##### Hook Object Creation
+  _trackObjects: =>
+    @_hookPrototype('Collection', 'constructor', @_saveObjects)
+    @_hookPrototype('Model', 'constructor', @_saveObjects)
+    @_hookPrototype('View', 'constructor', @_saveObjects)
+    @_hookPrototype('Router', 'constructor', @_saveObjects)
+  
   ##### Hook Events
   _hookEvents: =>
     @_hookPrototype('Collection', 'trigger', @_logEvent)
@@ -52,13 +59,6 @@ class window.Backbone.Debug
   ##### Hook Sync
   _hookSync: =>
     @_hookMethod('sync', @_logSync)
-  
-  ##### Hook Object Creation
-  _trackObjects: =>
-    @_hookPrototype('Collection', 'constructor', @_saveObjects)
-    @_hookPrototype('Model', 'constructor', @_saveObjects)
-    @_hookPrototype('View', 'constructor', @_saveObjects)
-    @_hookPrototype('Router', 'constructor', @_saveObjects)
   
   _saveObjects: (type, method, object) =>
     @_objects[type][object.constructor.name + ':' + object.cid] = object
