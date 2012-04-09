@@ -37,3 +37,8 @@ task :docs do
 
   system 'rocco backbone.debug.coffee'
 end
+
+desc 'create a new release'
+task :realse do
+  puts 'implement this task'
+end
