@@ -1,7 +1,17 @@
 class window.Backbone.Debug
-  constructor: (options={}) ->
-    @options = options
-    @_objects ||= {Collection: {}, Model: {}, View: {}, Router: {}}
+  constructor: () ->
+    @_options =
+      'log:events': true
+      'log:sync': true
+    
+    @_objects =
+      Collection: {}
+      Model: {}
+      View: {}
+      Router: {}
+      
+    _events: {}
+    
     @_trackObjects()
     @_hookEvents()
     @_hookSync()
@@ -21,46 +31,51 @@ class window.Backbone.Debug
   
   ##### Toggle Logging
   on: (option) =>
-    true
+    if option?
+      @_options[option] = true
+    else
+      @_options['log:events'] = true
+      @_options['log:sync'] = true
   
-  off: (option)=>
-    true
+  off: (option) =>
+    if option?
+      @_options[option] = false
+    else
+      @_options['log:events'] = false
+      @_options['log:sync'] = false
   
-  ##### Relevant Version Info
+  ##### Info
   info:
-    'Backbone.debug': '0.1.0'
+    'Backbone.debug': '0.2.0'
     'Backbone': window.Backbone.VERSION
     'Underscore': window._.VERSION
   
-  ##### Console Log Wrappers
-  _logObj: (obj) =>
-    console.log obj, _.keys(obj._callbacks)
-  
-  _logEvent: (obj, event) =>
-    console.log @last_obj, obj, 'obj', @last_obj == obj
-     
-  _logSync: (obj, method, model, options) =>
-    console.log "Sync - #{method}", obj
-  
-  ##### Hook Backbone.sync
-  _hookSync: =>
-    @_hookMethod('sync', @_logSync)
-  
-  ##### Hook Backbone Events
+  ##### Hook Events
   _hookEvents: =>
     @_hookPrototype('Collection', 'trigger', @_logEvent)
     @_hookPrototype('Model', 'trigger', @_logEvent)
     @_hookPrototype('View', 'trigger', @_logEvent)
     @_hookPrototype('Router', 'trigger', @_logEvent)
 
-  _saveObjects: (type, method, object) =>
-    @_objects[type][object.constructor.name + ':' + object.cid] = object
+  ##### Hook Sync
+  _hookSync: =>
+    @_hookMethod('sync', @_logSync)
   
-  ##### Track Object Creation
+  ##### Hook Object Creation
   _trackObjects: =>
     @_hookPrototype('Model', 'constructor', @_saveObjects)
   
-  # Hook Backbone Method
+  _saveObjects: (type, method, object) =>
+    @_objects[type][object.constructor.name + ':' + object.cid] = object
+  
+   ##### Console Log Wrappers
+  _logEvent: (parent_object, method, object, args) =>
+    console.log "#{args[0]} - ", object#, _.keys(object._callbacks)
+  
+  _logSync: (method, object, args) =>
+    console.log "sync - #{args[0]}", args[1] unless @_options['log:sync'] != true
+  
+  ##### Hook Backbone Method
   _hookMethod: (method, action) =>
     original = window.Backbone[method]
 
@@ -68,7 +83,7 @@ class window.Backbone.Debug
       original.apply(this, arguments)
       action(method, this, arguments)
 
-  # Hook Backbone Prototye Method
+  ##### Hook Backbone Prototype Method
   _hookPrototype: (object, method, action) =>
     original = window.Backbone[object].prototype[method]
 
