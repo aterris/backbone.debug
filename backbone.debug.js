@@ -104,8 +104,10 @@
       var original;
       original = window.Backbone[method];
       return window.Backbone[method] = function() {
-        original.apply(this, arguments);
-        return action(method, this, arguments);
+        var ret;
+        ret = original.apply(this, arguments);
+        action(method, this, arguments);
+        return ret;
       };
     };
 
@@ -113,8 +115,10 @@
       var original;
       original = window.Backbone[object].prototype[method];
       return window.Backbone[object].prototype[method] = function() {
-        original.apply(this, arguments);
-        return action(object, method, this, arguments);
+        var ret;
+        ret = original.apply(this, arguments);
+        action(object, method, this, arguments);
+        return ret;
       };
     };
 
