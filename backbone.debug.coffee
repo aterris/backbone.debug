@@ -65,7 +65,7 @@ class window.Backbone.Debug
   
    ##### Console Log Wrappers
   _logEvent: (parent_object, method, object, args) =>
-    console.log "#{args[0]} - ", object#, _.keys(object._callbacks)
+    console.log "#{args[0]} - ", object if @_options['log:events']
   
   _logSync: (method, object, args) =>
     console.log "sync - #{args[0]}", args[1] unless @_options['log:sync'] != true
