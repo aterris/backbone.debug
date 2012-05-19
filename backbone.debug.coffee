@@ -65,7 +65,7 @@ class window.Backbone.Debug
   
    ##### Console Log Wrappers
   _logEvent: (parent_object, method, object, args) =>
-    console.log "#{args[0]} - ", object#, _.keys(object._callbacks)
+    console.log "#{args[0]} - ", object if @_options['log:events']
   
   _logSync: (method, object, args) =>
     console.log "sync - #{args[0]}", args[1] unless @_options['log:sync'] != true
@@ -75,16 +75,18 @@ class window.Backbone.Debug
     original = window.Backbone[method]
 
     window.Backbone[method] = ->
-      original.apply(this, arguments)
+      ret = original.apply(this, arguments)
       action(method, this, arguments)
+      ret
 
   ##### Hook Backbone Prototype Method
   _hookPrototype: (object, method, action) =>
     original = window.Backbone[object].prototype[method]
 
     window.Backbone[object].prototype[method] = ->
-      original.apply(this, arguments)
+      ret = original.apply(this, arguments)
       action(object, method, this, arguments)
+      ret
 
 ##### Initialize
 window.Backbone.debug = new Backbone.Debug()
