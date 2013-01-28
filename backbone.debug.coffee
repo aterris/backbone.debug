@@ -69,10 +69,10 @@ class Backbone.Debug
   
   ##### Hook Object Creation
   _trackObjects: =>
-    @_hookPrototype('Collection', 'constructor', @_onNewInstance)
-    @_hookPrototype('Model', 'constructor', @_onNewInstance)
-    @_hookPrototype('View', 'constructor', @_onNewInstance)
-    @_hookPrototype('Router', 'constructor', @_onNewInstance)
+    @_hookConstructor('Collection', @_onNewInstance)
+    @_hookConstructor('Model', @_onNewInstance)
+    @_hookConstructor('View', @_onNewInstance)
+    @_hookConstructor('Router', @_onNewInstance)
   
   ##### Hook Events
   _hookEvents: =>
@@ -123,6 +123,33 @@ class Backbone.Debug
       ret = original.apply(this, arguments)
       action(object, method, this, arguments)
       ret
+
+  ##### Hook Constructor
+  _hookConstructor: (object, action) =>
+
+    @_hookPrototype(object, 'constructor', action)
+
+    # this is enough for coffeescript generated classes
+    # but not for classes which use Backbone's extend helper
+
+    originalExtend = Backbone[object].extend
+
+    Backbone[object].extend = (args...) ->
+      args[0] ||= {}
+
+      if hasOwnProperty.call(args[0], 'constructor')
+        originalConstructor = args[0].constructor
+      else
+        originalConstructor = @
+
+      # let's give the constructor a sane name
+      args[0].constructor = eval(
+        "(function #{object}() {
+          var ret = originalConstructor.apply(this, arguments);
+          action(object, 'extend', this, arguments);
+          return ret;
+        })")
+      originalExtend.apply(@, args)
 
   ##### Helpers
   _prettyInstanceName: (object, type) =>
