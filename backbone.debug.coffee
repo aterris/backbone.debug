@@ -1,4 +1,6 @@
-class window.Backbone.Debug
+Backbone = window.Backbone
+
+class Backbone.Debug
   constructor: () ->
     @_options =
       'log:events': true
@@ -72,21 +74,21 @@ class window.Backbone.Debug
   
   ##### Hook Backbone Method
   _hookMethod: (method, action) =>
-    original = window.Backbone[method]
+    original = Backbone[method]
 
-    window.Backbone[method] = ->
+    Backbone[method] = ->
       ret = original.apply(this, arguments)
       action(method, this, arguments)
       ret
 
   ##### Hook Backbone Prototype Method
   _hookPrototype: (object, method, action) =>
-    original = window.Backbone[object].prototype[method]
+    original = Backbone[object].prototype[method]
 
-    window.Backbone[object].prototype[method] = ->
+    Backbone[object].prototype[method] = ->
       ret = original.apply(this, arguments)
       action(object, method, this, arguments)
       ret
 
 ##### Initialize
-window.Backbone.debug = new Backbone.Debug()
+Backbone.debug = new Backbone.Debug()
