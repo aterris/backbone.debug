@@ -1,4 +1,18 @@
 Backbone = window.Backbone
+$ = Backbone.$ || window.$
+
+$.fn.backbone = (option = 'this') ->
+  switch option
+    when 'this'
+      @data('_backbone_view') || null
+    when 'closest'
+      elem = @
+      while !elem.data('_backbone_view')
+        elem = elem.parent()
+        return null if elem.is('html')
+      elem.data('_backbone_view')
+    when 'parent'
+      @parent().backbone('closest')
 
 class ConsoleLogger
   log: (type, object, details) ->
@@ -10,6 +24,7 @@ class Backbone.Debug
       'log:events': true
       'log:sync': true
       'log:instances': true
+      'log:views': true
     
     @_objects =
       Collection: {}
@@ -22,6 +37,7 @@ class Backbone.Debug
     @_trackObjects()
     @_hookEvents()
     @_hookSync()
+    @_trackViewBinding()
 
   ##### Object Accessors
   collections: =>
@@ -68,13 +84,21 @@ class Backbone.Debug
   ##### Hook Sync
   _hookSync: =>
     @_hookMethod('sync', @_onSync)
-  
+
+  ##### Hook View -> DOM Binding
+  _trackViewBinding: =>
+    @_hookPrototype('View', 'setElement', @_onViewBinding)
+
   ##### Handle Debug Data
   _onNewInstance: (type, method, object) =>
-    name = object.constructor.name || type
-    name = "#{name}:#{object.cid}" if object.cid
+    name = @_prettyInstanceName(object, type)
     @_objects[type][name] = object
     @logger.log('instance', name, type) if @_options['log:instances']
+
+  _onViewBinding: (type, method, object) =>
+    object.$el.data('_backbone_view', object)
+    name = @_prettyInstanceName(object, type)
+    @logger.log('view', name, object.el) if @_options['log:views']
 
   _onEvent: (type, method, object, args) =>
     @logger.log('event', object, args[0]) if @_options['log:events']
@@ -99,6 +123,13 @@ class Backbone.Debug
       ret = original.apply(this, arguments)
       action(object, method, this, arguments)
       ret
+
+  ##### Helpers
+  _prettyInstanceName: (object, type) =>
+    name = object.constructor.name || type
+    name = "#{name}:#{object.cid}" if object.cid
+    name
+
 
 ##### Initialize
 Backbone.debug = new Backbone.Debug()
