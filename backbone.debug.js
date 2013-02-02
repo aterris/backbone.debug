@@ -20,7 +20,7 @@
         elem = this;
         while (!elem.data('_backbone_view')) {
           elem = elem.parent();
-          if (elem.is('html')) {
+          if (elem.size() === 0) {
             return null;
           }
         }

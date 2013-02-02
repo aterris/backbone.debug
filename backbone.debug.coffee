@@ -9,7 +9,7 @@ $.fn.backbone = (option = 'this') ->
       elem = @
       while !elem.data('_backbone_view')
         elem = elem.parent()
-        return null if elem.is('html')
+        return null if elem.size() == 0
       elem.data('_backbone_view')
     when 'parent'
       @parent().backbone('closest')
