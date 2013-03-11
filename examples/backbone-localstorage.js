@@ -1,17 +1,27 @@
 /**
  * Backbone localStorage Adapter
+ * Version 1.1.0
+ *
  * https://github.com/jeromegn/Backbone.localStorage
  */
-
-(function() {
+(function (root, factory) {
+   if (typeof define === "function" && define.amd) {
+      // AMD. Register as an anonymous module.
+      define(["underscore","backbone"], function(_, Backbone) {
+        // Use global variables if the locals are undefined.
+        return factory(_ || root._, Backbone || root.Backbone);
+      });
+   } else {
+      // RequireJS isn't being used. Assume underscore and backbone are loaded in <script> tags
+      factory(_, Backbone);
+   }
+}(this, function(_, Backbone) {
 // A simple module to replace `Backbone.sync` with *localStorage*-based
 // persistence. Models are given GUIDS, and saved into a JSON object. Simple
 // as that.
 
 // Hold reference to Underscore.js and Backbone.js in the closure in order
 // to make things work even if they are removed from the global namespace
-var _ = this._;
-var Backbone = this.Backbone;
 
 // Generate four random hex digits.
 function S4() {
@@ -43,94 +53,161 @@ _.extend(Backbone.LocalStorage.prototype, {
   // have an id of it's own.
   create: function(model) {
     if (!model.id) {
-        model.id = guid();
-        model.set(model.idAttribute, model.id);
+      model.id = guid();
+      model.set(model.idAttribute, model.id);
     }
     this.localStorage().setItem(this.name+"-"+model.id, JSON.stringify(model));
     this.records.push(model.id.toString());
     this.save();
-    return model.toJSON();
+    return this.find(model);
   },
 
   // Update a model by replacing its copy in `this.data`.
   update: function(model) {
     this.localStorage().setItem(this.name+"-"+model.id, JSON.stringify(model));
-    if (!_.include(this.records, model.id.toString())) this.records.push(model.id.toString()); this.save();
-    return model.toJSON();
+    if (!_.include(this.records, model.id.toString()))
+      this.records.push(model.id.toString()); this.save();
+    return this.find(model);
   },
 
   // Retrieve a model from `this.data` by id.
   find: function(model) {
-    return JSON.parse(this.localStorage().getItem(this.name+"-"+model.id));
+    return this.jsonData(this.localStorage().getItem(this.name+"-"+model.id));
   },
 
   // Return the array of all models currently in storage.
   findAll: function() {
     return _(this.records).chain()
-        .map(function(id){return JSON.parse(this.localStorage().getItem(this.name+"-"+id));}, this)
-        .compact()
-        .value();
+      .map(function(id){
+        return this.jsonData(this.localStorage().getItem(this.name+"-"+id));
+      }, this)
+      .compact()
+      .value();
   },
 
   // Delete a model from `this.data`, returning it.
   destroy: function(model) {
+    if (model.isNew())
+      return false
     this.localStorage().removeItem(this.name+"-"+model.id);
-    this.records = _.reject(this.records, function(record_id){return record_id == model.id.toString();});
+    this.records = _.reject(this.records, function(id){
+      return id === model.id.toString();
+    });
     this.save();
     return model;
   },
 
   localStorage: function() {
-      return localStorage;
+    return localStorage;
+  },
+
+  // fix for "illegal access" error on Android when JSON.parse is passed null
+  jsonData: function (data) {
+      return data && JSON.parse(data);
+  },
+
+  // Clear localStorage for specific collection.
+  _clear: function() {
+    var local = this.localStorage(),
+      itemRe = new RegExp("^" + this.name + "-");
+
+    // Remove id-tracking item (e.g., "foo").
+    local.removeItem(this.name);
+
+    // Match all data items (e.g., "foo-ID") and remove.
+    _.chain(local).keys()
+      .filter(function (k) { return itemRe.test(k); })
+      .each(function (k) { local.removeItem(k); });
+  },
+
+  // Size of localStorage.
+  _storageSize: function() {
+    return this.localStorage().length;
   }
 
 });
 
 // localSync delegate to the model or collection's
 // *localStorage* property, which should be an instance of `Store`.
-// window.Store.sync and Backbone.localSync is deprectated, use Backbone.LocalStorage.sync instead
-Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(method, model, options, error) {
+// window.Store.sync and Backbone.localSync is deprecated, use Backbone.LocalStorage.sync instead
+Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(method, model, options) {
   var store = model.localStorage || model.collection.localStorage;
 
-  // Backwards compatibility with Backbone <= 0.3.3
-  if (typeof options == 'function') {
-    options = {
-      success: options,
-      error: error
-    };
-  }
+  var resp, errorMessage, syncDfd = $.Deferred && $.Deferred(); //If $ is having Deferred - use it.
 
-  var resp;
+  try {
 
-  switch (method) {
-    case "read":    resp = model.id != undefined ? store.find(model) : store.findAll(); break;
-    case "create":  resp = store.create(model);                            break;
-    case "update":  resp = store.update(model);                            break;
-    case "delete":  resp = store.destroy(model);                           break;
+    switch (method) {
+      case "read":
+        resp = model.id != undefined ? store.find(model) : store.findAll();
+        break;
+      case "create":
+        resp = store.create(model);
+        break;
+      case "update":
+        resp = store.update(model);
+        break;
+      case "delete":
+        resp = store.destroy(model);
+        break;
+    }
+
+  } catch(error) {
+    if (error.code === DOMException.QUOTA_EXCEEDED_ERR && store._storageSize() === 0)
+      errorMessage = "Private browsing is unsupported";
+    else
+      errorMessage = error.message;
   }
 
   if (resp) {
-    options.success(resp);
+    model.trigger("sync", model, resp, options);
+    if (options && options.success)
+      if (Backbone.VERSION === "0.9.10") {
+        options.success(model, resp, options);
+      } else {
+        options.success(resp);
+      }
+    if (syncDfd)
+      syncDfd.resolve(resp);
+
   } else {
-    options.error('Record not found.');
+    errorMessage = errorMessage ? errorMessage
+                                : "Record Not Found";
+
+    model.trigger("error", model, errorMessage, options);
+    if (options && options.error)
+      if (Backbone.VERSION === "0.9.10") {
+        options.error(model, errorMessage, options);
+      } else {
+        options.error(errorMessage);
+      }
+
+    if (syncDfd)
+      syncDfd.reject(errorMessage);
   }
+
+  // add compatibility with $.ajax
+  // always execute callback for success and error
+  if (options && options.complete) options.complete(resp);
+
+  return syncDfd && syncDfd.promise();
 };
 
 Backbone.ajaxSync = Backbone.sync;
 
 Backbone.getSyncMethod = function(model) {
-	if(model.localStorage || (model.collection && model.collection.localStorage))
-	{
-		return Backbone.localSync;
-	}
+  if(model.localStorage || (model.collection && model.collection.localStorage)) {
+    return Backbone.localSync;
+  }
 
-	return Backbone.ajaxSync;
+  return Backbone.ajaxSync;
 };
 
 // Override 'Backbone.sync' to default to localSync,
 // the original 'Backbone.sync' is still available in 'Backbone.ajaxSync'
-Backbone.sync = function(method, model, options, error) {
-	return Backbone.getSyncMethod(model).apply(this, [method, model, options, error]);
+Backbone.sync = function(method, model, options) {
+  return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
 };
 
-})();
+return Backbone.LocalStorage;
+}));
