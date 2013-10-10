@@ -224,7 +224,8 @@
         } else {
           originalConstructor = this;
         }
-        args[0].constructor = eval("(function " + object + "() {          var ret = originalConstructor.apply(this, arguments);          action(object, 'extend', this, arguments);          return ret;        })");
+        var fname = originalConstructor.name ? originalConstructor.name : object;
+        args[0].constructor = eval("(function " + fname + "() {          var ret = originalConstructor.apply(this, arguments);          action(object, 'extend', this, arguments);          return ret;        })");
         return originalExtend.apply(this, args);
       };
     };
